@@ -1,0 +1,19 @@
+{
+  "name": "sf-parking-meters",
+  "version": "1.0.0",
+  "description": "a map of the parking meters in San Francisco",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sjtamme/sf-parking-meters.git"
+  },
+  "author": "Sarah Jane Tamme",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sjtamme/sf-parking-meters/issues"
+  },
+  "homepage": "https://github.com/sjtamme/sf-parking-meters#readme"
+}
