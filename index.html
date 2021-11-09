@@ -3,67 +3,168 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
+    <meta charset="utf-8">
 
-  <title>Lesson 02 template</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-    }
+    <title>Lesson 02 template</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <link rel="stylesheet" href="libs/Leaflet.markercluster/MarkerCluster.Default.css"> />
+    <link rel="stylesheet" href="libs/Leaflet.markercluster/MarkerCluster.css"> />
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-    #map {
-      position: absolute;
-      width: 100%;
-      top: 0;
-      bottom: 0;
-    }
-  </style>
+        #map {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            bottom: 0;
+        }
+
+        #ui {
+            position: absolute;
+            z-index: 1000;
+            /* place above map */
+            bottom: 18px;
+            right: 18px;
+            padding: 6px 12px;
+            background: rgba(256, 256, 256, .9);
+        }
+
+        #ui ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #ui li {
+            margin-bottom: 6px;
+        }
+
+        #ui a {
+            text-decoration: none;
+        }
+
+        #ui a:hover {
+            font-weight: bold;
+        }
+
+        .highlight {
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
 
-  <div id="map"></div>
+    <div id="map"></div>
+    <div id="ui">
+        <h3>San Francisco Parking Meters</h3>
+        <h4></h4>
+        <ul id="legend-list"></ul>
+    </div>
 
-  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
-  <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
-  <script>
-    // map options
-    const options = {
-    center: [37.7639, -122.429],
-      zoom: 12.4,
-    }
-    // instantiate Leaflet map
-    const map = L.map('map', options);
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+    <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+    <script src="libs/Leaflet.markercluster/leaflet.markercluster.js"></script>
+    <script>
 
-    // add CARTO voyager tiles with no labels
-    L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/rastertiles/voyager_nolabels/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
-    }).addTo(map);
+        const options = {
+            center: [37.7639, -122.429],
+            zoom: 12.4,
+        }
 
-    const countiesData = d3.json('data/sf-counties.json');
-    const colorsData = d3.json('data/boldcolors.json');
-    const metersData = d3.json('data/meters.json');
+        const map = L.map('map', options);
 
-    // use Promise to wait until data is all loaded
-    Promise.all([countiesData, colorsData, metersData]).then(drawMap);
+        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/rastertiles/voyager_nolabels/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
 
+        }).addTo(map);
 
-    function drawMap(data) {
-      // function is called when Promise is fulfilled and data is ready
+        const quadrantsData = d3.json('data/quadrants.geojson')
+        const colorsData = d3.json('data/boldcolors.json');
+        const metersData = d3.json('data/meters.json');
 
-      // inspect array of data
-      console.log(data);
+        Promise.all([quadrantsData, colorsData, metersData]).then(drawMap);
 
-      // pull out separate data arrays and assign to variables
-      const counties = data[0];
-      const colors = data[1];
-      const meters = data[2];
+        function drawMap(data) {
 
-  </script>
+            console.log(data);
+
+            const quadrants = data[0];
+            const colors = data[1];
+            const meters = data[2];
+
+            const legendList = $('#legend-list');
+
+            for (let i = 1; i <= quadrants.features.length; i++) {
+                legendList.append('<li class="legend-item" id="quadrant-' + i + '"><a style="color:' + colors.Bold[11][
+                        i - 1
+                    ] +
+                    '" href="#">Quadrant ' + i + ' </a></li>');
+            }
+            const quadrantsLayerGroup = L.geoJson(quadrants, {
+                style: function (feature) {
+                    return {
+                        color: colors.Bold[11][feature.properties.objectid_1 - 1],
+                        fillOpacity: .6
+                    }
+                },
+                onEachFeature(feature, layer) {
+                    $('#quadrant-' + feature.properties.objectid_1 + ' span').append(feature.properties.count);
+                    layer.on('mouseover', function () {
+                        this.setStyle({
+                            fillOpacity: .8
+                        });
+
+                        $('#quadrant-' + feature.properties.objectid_1).addClass('highlight');
+                    })
+                    layer.on('mouseout', function () {
+                        this.setStyle({
+                            fillOpacity: .6
+                        });
+                    })
+                }
+            }).addTo(map);
+
+            $('.legend-item').on('mouseover', function () {
+                var num = this.id.replace('quadrant-', '');
+                highlightQuadrant(num);
+            });
+
+            function highlightQuadrant(quadrantNum) {
+                quadrantsLayerGroup.eachLayer(function (layer) {
+                    if (layer.feature.properties.objectid_1 === quadrantNum) {
+                        layer.setStyle({
+                            fillOpacity: .8
+                        }).bringToFront();
+                    } else {
+                        layer.setStyle({
+                            fillOpacity: .6
+                        });
+                    }
+                });
+            }
+
+            const markers = L.markerClusterGroup();
+
+            meters.features.forEach(function (feature) {
+                let coords = feature.geometry.coordinates;
+                let marker = L.marker([coords[1], coords[0]]);
+
+                marker.bindTooltip("Parking Space ID: " + feature.properties.PARKING_SPACE_ID);
+
+                markers.addLayer(marker);
+
+            });
+  
+            map.addLayer(markers);
+        }
+    </script>
 </body>
 
 </html>
