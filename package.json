@@ -12,6 +12,7 @@
   },
   "author": "Sarah Jane Tamme",
   "license": "ISC",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/sjtamme/sf-parking-meters/issues"
   },
