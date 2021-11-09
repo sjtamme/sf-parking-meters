@@ -24,7 +24,7 @@ This map showcases geoprocessing with Node.
 * Used Leaflet.markercluster plugin
 * Committed work along the way
 
-**NOTES: Although I did do these processes for files, they are not the files I ended up using in the map. I was unable to get the coordinated viz to work with the orginial files.
+**NOTES: Although I did do these processes for files throughout my workflow, they are not the files I ended up using in the map. I was unable to get the coordinated viz to work with the original files.
 
 ## Commands used in Command Line:
 * cd - change directory
